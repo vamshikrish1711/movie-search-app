@@ -45,4 +45,4 @@ npm run lint    # oxlint
 
 ## Live URL
 
-Pending deployment.
+https://movie-app-sable-phi.vercel.app
