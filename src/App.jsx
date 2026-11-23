@@ -1,23 +1,69 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SearchPanel from './components/SearchPanel.jsx';
 import MovieGrid from './components/MovieGrid.jsx';
 import FavouritesList from './components/FavouritesList.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
 import MovieDetails from './components/MovieDetails.jsx';
+import TrendingControls from './components/TrendingControls.jsx';
+import TrendingView from './components/TrendingView.jsx';
 import { useMovieSearch } from './hooks/useMovieSearch.js';
 import { useFavourites } from './hooks/useFavourites.js';
+import { useTrendingMovies } from './hooks/useTrendingMovies.js';
+import { defaultFilters, normalizeFilters, trendingHeading } from './utils/trending.js';
+
+const VIEWS = ['search', 'trending', 'favourites'];
+
+function readUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedView = params.get('view');
+  const defaults = defaultFilters();
+  return {
+    view: VIEWS.includes(requestedView) ? requestedView : 'search',
+    filters: normalizeFilters({
+      year: params.get('year') ?? defaults.year,
+      month: params.get('month') ?? defaults.month,
+      region: params.get('region') ?? 'IN',
+      sort: params.get('sort') ?? 'popular',
+    }),
+  };
+}
 
 export default function App() {
+  const [state, setState] = useState(readUrlState);
+  const { view, filters } = state;
   const [query, setQuery] = useState('');
-  const [view, setView] = useState('search');
   const [selectedId, setSelectedId] = useState(null);
   const { results, status, error, retry } = useMovieSearch(query);
   const { favourites, toggle, isFavourite } = useFavourites();
+  const trending = useTrendingMovies(filters, view === 'trending');
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('view', view);
+    if (view === 'trending') {
+      params.set('year', String(filters.year));
+      params.set('month', String(filters.month));
+      params.set('region', filters.region);
+      params.set('sort', filters.sort);
+    }
+    const queryString = params.toString();
+    const target = queryString ? `?${queryString}` : window.location.pathname;
+    window.history.replaceState(null, '', `${target}${window.location.hash}`);
+  }, [view, filters]);
+
+  useEffect(() => {
+    const handlePopState = () => setState(readUrlState());
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const openDetails = useCallback((id) => setSelectedId(id), []);
   const closeDetails = useCallback(() => setSelectedId(null), []);
-  const changeView = useCallback((nextView) => setView(nextView), []);
-  const showSearch = useCallback(() => setView('search'), []);
+  const changeView = useCallback((nextView) => setState((current) => ({ ...current, view: nextView })), []);
+  const changeFilters = useCallback((nextFilters) => {
+    setState((current) => ({ ...current, filters: normalizeFilters(nextFilters) }));
+  }, []);
+  const showSearch = useCallback(() => changeView('search'), [changeView]);
 
   function renderResults() {
     if (!query.trim()) {
@@ -86,6 +132,15 @@ export default function App() {
     );
   }
 
+  const heading = view === 'trending'
+    ? trendingHeading(filters)
+    : view === 'favourites' ? 'Saved films' : 'Find a film';
+  const intro = view === 'trending'
+    ? 'Filters update the list and the URL. Open a film for more detail.'
+    : view === 'favourites'
+      ? `${favourites.length} ${favourites.length === 1 ? 'film' : 'films'} kept on this device.`
+      : 'Posters first. Open a film for cast, runtime and release details.';
+
   return (
     <div className="app">
       <header className="masthead">
@@ -101,19 +156,26 @@ export default function App() {
           onViewChange={changeView}
           resultCount={results.length}
           favouriteCount={favourites.length}
+          trendingCount={trending.loadedCount}
           hasSearched={status !== 'idle' && Boolean(query.trim())}
+          trendingControls={<TrendingControls filters={filters} onChange={changeFilters} />}
         />
 
         <section className="content" aria-label="Film collection">
           <div className="content__head">
-            <h1>{view === 'search' ? 'Find a film' : 'Saved films'}</h1>
-            <p className="content__intro">
-              {view === 'search'
-                ? 'Posters first. Open a film for cast, runtime and release details.'
-                : `${favourites.length} ${favourites.length === 1 ? 'film' : 'films'} kept on this device.`}
-            </p>
+            <h1>{heading}</h1>
+            <p className="content__intro">{intro}</p>
           </div>
-          {view === 'search' ? renderResults() : renderFavourites()}
+          {view === 'trending' && (
+            <TrendingView
+              trending={trending}
+              isFavourite={isFavourite}
+              onOpen={openDetails}
+              onToggleFavourite={toggle}
+            />
+          )}
+          {view === 'search' && renderResults()}
+          {view === 'favourites' && renderFavourites()}
         </section>
       </main>
 
