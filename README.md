@@ -15,6 +15,8 @@ The Trending view uses `GET /discover/movie`, filtered by year, month, region an
 
 Every change refetches automatically. Results are cached in memory per year, month, region, sort and page for the session, so switching back does not refetch. "Load more" requests the next TMDB page. The heading and URL describe the current selection, for example `?view=trending&year=2026&month=11&region=IN&sort=popular`. No extra environment variable is needed; the view uses the same TMDB key.
 
+The home page shows a 12-poster trending preview for the current filters when no search is active, with a link to the full trending view. The Reel Index wordmark returns to the home page from any view.
+
 ## Design direction
 
 Swiss editorial print, built around posters rather than uniform cards. Paper `#f3f0e9`, surface `#e8e2d6`, ink `#17130e`, muted `#6e6558`, vermilion accent `#be410d`. Display type is Instrument Serif, body type is IBM Plex Sans, and metadata uses IBM Plex Mono.

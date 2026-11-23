@@ -35,7 +35,8 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const { results, status, error, retry } = useMovieSearch(query);
   const { favourites, toggle, isFavourite } = useFavourites();
-  const trending = useTrendingMovies(filters, view === 'trending');
+  const showHomeTrending = view === 'search' && !query.trim();
+  const trending = useTrendingMovies(filters, view === 'trending' || showHomeTrending);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -64,15 +65,38 @@ export default function App() {
     setState((current) => ({ ...current, filters: normalizeFilters(nextFilters) }));
   }, []);
   const showSearch = useCallback(() => changeView('search'), [changeView]);
+  const openTrending = useCallback(() => changeView('trending'), [changeView]);
+  const goHome = useCallback((event) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    setQuery('');
+    setSelectedId(null);
+    setState({ view: 'search', filters: defaultFilters() });
+  }, []);
 
   function renderResults() {
     if (!query.trim()) {
       return (
-        <StatusMessage
-          variant="empty"
-          title="Start with a title"
-          message="Search for a film to see posters, release years and ratings. Save any film to keep it here."
-        />
+        <>
+          <StatusMessage
+            variant="empty"
+            title="Start with a title"
+            message="Search for a film to see posters, release years and ratings. Save any film to keep it here."
+          />
+          <section className="home-trending" aria-labelledby="home-trending-heading">
+            <div className="home-trending__head">
+              <h2 id="home-trending-heading">{trendingHeading(filters)}</h2>
+            </div>
+            <TrendingView
+              compact
+              trending={trending}
+              isFavourite={isFavourite}
+              onOpen={openDetails}
+              onToggleFavourite={toggle}
+              onOpenTrending={openTrending}
+            />
+          </section>
+        </>
       );
     }
     if (status === 'loading') {
@@ -144,7 +168,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="masthead">
-        <p className="wordmark">Reel Index</p>
+        <a className="wordmark" href="/" onClick={goHome}>Reel Index</a>
         <p className="masthead__note">A poster-led search of the TMDB catalogue</p>
       </header>
 

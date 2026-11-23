@@ -68,8 +68,19 @@ a {
 
 .wordmark {
   margin: 0;
+  color: var(--ink);
   font: 400 clamp(34px, 4.6vw, 58px) / 1 var(--font-display);
   letter-spacing: -0.025em;
+  text-decoration: none;
+  transition: color 160ms ease-out, transform 160ms ease-out;
+}
+
+.wordmark:hover {
+  color: var(--accent);
+}
+
+.wordmark:active {
+  transform: translateY(1px);
 }
 
 .masthead__note {
@@ -638,6 +649,37 @@ a {
 .select:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.home-trending {
+  margin-top: 38px;
+}
+
+.home-trending__head h2 {
+  margin: 0 0 22px;
+  font: 400 clamp(26px, 3vw, 38px) / 1.05 var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+.text-link {
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--accent);
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font: 500 11px / 1.2 var(--font-mono);
+  white-space: nowrap;
+  transition: color 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out;
+}
+
+.text-link:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.text-link:active {
+  transform: translateY(1px);
 }
 
 .pagination {
