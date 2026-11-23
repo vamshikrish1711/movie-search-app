@@ -5,7 +5,9 @@ export default function SearchPanel({
   onViewChange,
   resultCount,
   favouriteCount,
+  trendingCount,
   hasSearched,
+  trendingControls,
 }) {
   return (
     <aside className="rail">
@@ -25,6 +27,8 @@ export default function SearchPanel({
         <p className="field-help">Search runs as you type. Poster results come from TMDB.</p>
       </div>
 
+      {view === 'trending' && trendingControls}
+
       <nav className="rail__block views" aria-label="Views">
         <span className="field-label" id="views-label">Views</span>
         <div role="group" aria-labelledby="views-label" className="views__list">
@@ -36,6 +40,15 @@ export default function SearchPanel({
           >
             <span>Results</span>
             <span>{hasSearched ? resultCount : '0'}</span>
+          </button>
+          <button
+            type="button"
+            className="view-tab"
+            aria-current={view === 'trending' ? 'page' : undefined}
+            onClick={() => onViewChange('trending')}
+          >
+            <span>Trending</span>
+            <span>{view === 'trending' ? trendingCount : '0'}</span>
           </button>
           <button
             type="button"
